@@ -373,7 +373,7 @@ async def check_anniversaries():
                 if streamer.get("last_anniversary_check") != check_key:
                     streamer["last_anniversary_check"] = check_key
                     embed = discord.Embed(
-                        title=f"✨ [{streamer['name']}] 데뷔 {days_passed일째!",
+                        title=f"✨ [{streamer['name']}] 데뷔 {days_passed}일째!",
                         description=f"오늘은 {streamer['name']}님이 세상에 빛을 보인 지 **{days_passed}일**째 되는 날이에요! 🥳 감축사드립니다!",
                         color=0x00BFFF
                     )
