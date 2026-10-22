@@ -11,14 +11,14 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# 📌 스텔라이브 멤버 리스트 (생일과 데뷔일을 "YYYY-MM-DD" 연도 포함 형식으로 입력!)
+# 📌 스텔라이브 멤버 리스트 (실제 생일 및 데뷔일 적용 완료!)
 STREAMERS = [
     {
         "name": "스텔라이브",
         "youtube_channel_id": "UC2b4WRE5BZ6SIUWBeJU8rwg",
         "twitter_username": "StelLive_kr",
-        "birthday": "2022-06-25",  # 법인 설립일 등으로 활용 가능
-        "debut": "2022-12-19",     # 스텔라이브 공식 데뷔일
+        "birthday": "2022-06-25",
+        "debut": "2022-12-19",
         "discord_channel_id": 1562773780823281714,
         "is_live": False,
         "latest_youtube_id": None,
@@ -30,8 +30,8 @@ STREAMERS = [
         "chzzk_id": "b5ed5db484d04faf4d150aedd362f34b",
         "youtube_channel_id": "UCIVFv8AiQLqM9oLHTixrNYw",
         "twitter_username": "GANGZIIII",
-        "birthday": "1997-05-14",  # 예시 생년월일 (실제 연도로 수정)
-        "debut": "2018-01-01",     # 예시 데뷔일
+        "birthday": "1997-05-14",
+        "debut": "2018-01-01",
         "discord_channel_id": 1562750663031660634,
         "is_live": False,
         "latest_youtube_id": None,
@@ -57,7 +57,7 @@ STREAMERS = [
         "youtube_channel_id": "UC0YQnenKBCu5sGb7H61n6HA",
         "twitter_username": "SakihaneHuya",
         "birthday": "2025-07-07",
-        "debut": "2025-09-20", # 예시 데뷔일
+        "debut": "2025-09-20",
         "discord_channel_id": 1562750735299387482,
         "is_live": False,
         "latest_youtube_id": None,
@@ -312,7 +312,7 @@ async def check_twitter_updates():
 
 
 async def check_anniversaries():
-    """생일(몇 번째) 및 데뷔일(일수/주년) 정밀 계산 및 축하 알림 함수"""
+    """생일 및 데뷔일 기념일 체크 함수"""
     now = datetime.now()
     today_str = now.strftime("%Y-%m-%d")
     today_md = now.strftime("%m-%d")
@@ -322,14 +322,12 @@ async def check_anniversaries():
         if not channel:
             continue
             
-        # 오늘 이미 알림을 보냈다면 패스
         if streamer.get("last_anniversary_check") == today_str:
             continue
             
         bday_str = streamer.get("birthday")
         debut_str = streamer.get("debut")
         
-        # 1. 생일 체크 (몇 번째 생일인지 계산)
         if bday_str and bday_str[5:] == today_md:
             streamer["last_anniversary_check"] = today_str
             birth_year = int(bday_str[:4])
@@ -342,7 +340,6 @@ async def check_anniversaries():
             )
             await channel.send(embed=embed)
             
-        # 2. 데뷔일 체크 (N주년 또는 100일, 500일 등 일수 계산)
         if debut_str and debut_str[5:] == today_md:
             streamer["last_anniversary_check"] = today_str
             debut_date = datetime.strptime(debut_str, "%Y-%m-%d")
@@ -360,21 +357,18 @@ async def check_anniversaries():
             )
             await channel.send(embed=embed)
             
-        # 3. 데뷔 후 100일, 200일, 500일, 1000일 등 특별한 일수(Day) 체크
         if debut_str:
             debut_date = datetime.strptime(debut_str, "%Y-%m-%d")
             delta = datetime.now() - debut_date
-            days_passed = delta.days + 1  # 데뷔 당일을 1일로 계산
+            days_passed = delta.days + 1
             
-            # 100일 단위 혹은 1000일 단위일 때 당일 알림
             if days_passed > 0 and (days_passed % 100 == 0 or days_passed == 50):
-                # 오늘 날짜로 이미 이 일수 알림을 보냈는지 확인
                 check_key = f"day_{days_passed}"
                 if streamer.get("last_anniversary_check") != check_key:
                     streamer["last_anniversary_check"] = check_key
                     embed = discord.Embed(
                         title=f"✨ [{streamer['name']}] 데뷔 {days_passed}일째!",
-                        description=f"오늘은 {streamer['name']}님이 세상에 빛을 보인 지 **{days_passed}일**째 되는 날이에요! 🥳 감축사드립니다!",
+                        description=f"오늘은 {streamer['name']}님이 세상에 빛을 보인 지 **{days_passed}일**째 되는 날이에요! 🥳",
                         color=0x00BFFF
                     )
                     await channel.send(embed=embed)
@@ -382,8 +376,6 @@ async def check_anniversaries():
 
 @tasks.loop(seconds=60)
 async def live_and_chat_monitor():
-    """60초마다 치지직, 유튜브, X, 기념일을 동시에 체크하는 통합 루프"""
-    # 1. 치지직 생방송 체크
     for streamer in STREAMERS:
         if not streamer.get("chzzk_id"):
             continue
@@ -402,20 +394,18 @@ async def live_and_chat_monitor():
                 color=0x00FFA3
             )
             embed.add_field(name="방송국 바로가기", value=f"[클릭해서 시청하기](https://chzzk.naver.com/live/{streamer['chzzk_id']})", inline=False)
+            
+            # 🖼️ 프로필 사진 썸네일 적용
             if profile_image:
                 embed.set_thumbnail(url=profile_image)
+                
             await channel.send(embed=embed)
 
         elif not is_live and streamer["is_live"]:
             streamer["is_live"] = False
 
-    # 2. 유튜브 업로드 체크
     await check_youtube_updates()
-
-    # 3. X(트위터) 게시글 체크
     await check_twitter_updates()
-
-    # 4. 생일 및 데뷔일 기념일 체크
     await check_anniversaries()
 
 
@@ -428,11 +418,11 @@ async def test_alert(ctx, *, streamer_name: str):
             break
             
     if not target:
-        await ctx.send(f"❌ '{streamer_name}' 스트리머를 찾을 수 없어! 이름을 다시 확인해 봐.")
+        await ctx.send(f"❌ '{streamer_name}' 스트리머를 찾을 수 없어!")
         return
 
     if not target.get("chzzk_id"):
-        await ctx.send(f"ℹ️ '{target['name']}'은(는) 치지직 생방송 채널이 없는 공식 계정이야! (유튜브 및 트위터/기념일 전용)")
+        await ctx.send(f"ℹ️ '{target['name']}'은(는) 치지직 생방송 채널이 없는 공식 계정이야!")
         return
 
     await ctx.send(f"🔍 '{streamer_name}'의 방송 상태를 확인하는 중...")
@@ -449,12 +439,25 @@ async def test_alert(ctx, *, streamer_name: str):
             embed.set_thumbnail(url=profile_image)
         await ctx.send(embed=embed)
     else:
-        await ctx.send(f"💤 현재 **{target['name']}**님은 방송 꺼져 있는 상태야! (오프라인)")
+        await ctx.send(f"💤 현재 **{target['name']}**님은 방송 꺼져 있는 상태야!")
 
 
 @bot.event
 async def on_ready():
-    print(f"로그인 완료: {bot.user} (스텔라이브 통합 알림 봇 준비 완료!)")
+    print(f"로그인 완료: {bot.user}")
+    
+    # 🔄 재시작 시 이미 켜져 있는 방송은 알림 스킵하도록 상태 동기화
+    print("🔍 현재 방송 상태 동기화 중...")
+    for streamer in STREAMERS:
+        if streamer.get("chzzk_id"):
+            is_live, _, _, _ = await check_chzzk_status(streamer["chzzk_id"])
+            if is_live:
+                streamer["is_live"] = True
+                print(f" - [방송 중 감지됨] {streamer['name']} (알림 스킵)")
+            else:
+                streamer["is_live"] = False
+    print("✨ 방송 상태 동기화 완료!")
+
     if not live_and_chat_monitor.is_running():
         live_and_chat_monitor.start()
 
