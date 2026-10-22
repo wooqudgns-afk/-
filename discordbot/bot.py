@@ -140,17 +140,23 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 
 async def check_chzzk_status(chzzk_id):
-    """치지직 방송 상태 확인 함수"""
+    """치지직 방송 상태 확인 함수 (타임아웃 보호 추가)"""
     url = f"https://api.chzzk.naver.com/service/v1/channels/{chzzk_id}"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status == 200:
-                data = await response.json()
-                content = data.get("content", {})
-                status = content.get("openLive", False)
-                live_title = content.get("liveTitle", "제목 없음")
-                chat_channel_id = content.get("chatChannelId")
-                return status, live_title, chat_channel_id
+    try:
+        # 5초 동안 응답이 없으면 멈추지 않고 바로 끊어버리도록 타임아웃 설정!
+        timeout = aiohttp.ClientTimeout(total=5)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    content = data.get("content", {})
+                    status = content.get("openLive", False)
+                    live_title = content.get("liveTitle", "제목 없음")
+                    chat_channel_id = content.get("chatChannelId")
+                    return status, live_title, chat_channel_id
+    except Exception as e:
+        print(f"치지직 API 호출 에러 ({chzzk_id}): {e}")
+    
     return False, "", None
 
 
