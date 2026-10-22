@@ -11,7 +11,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# 📌 스텔라이브 멤버 리스트 (실제 생일 및 데뷔일 적용 완료!)
+# 📌 스텔라이브 멤버 리스트 (치지직, 유튜브, 트위터, 기념일 통합)
 STREAMERS = [
     {
         "name": "스텔라이브",
@@ -21,6 +21,7 @@ STREAMERS = [
         "debut": "2022-12-19",
         "discord_channel_id": 1562773780823281714,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -34,6 +35,7 @@ STREAMERS = [
         "debut": "2018-01-01",
         "discord_channel_id": 1562750663031660634,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -47,6 +49,7 @@ STREAMERS = [
         "debut": "2023-01-08",
         "discord_channel_id": 1562750721202585630,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -60,6 +63,7 @@ STREAMERS = [
         "debut": "2025-09-20",
         "discord_channel_id": 1562750735299387482,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -73,6 +77,7 @@ STREAMERS = [
         "debut": "2023-06-10",
         "discord_channel_id": 1562750874881761370,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -86,6 +91,7 @@ STREAMERS = [
         "debut": "2023-06-10",
         "discord_channel_id": 1562750817147162625,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -99,6 +105,7 @@ STREAMERS = [
         "debut": "2023-06-11",
         "discord_channel_id": 1562750799111659570,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -112,6 +119,7 @@ STREAMERS = [
         "debut": "2023-06-11",
         "discord_channel_id": 1562750785840742471,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -125,6 +133,7 @@ STREAMERS = [
         "debut": "2024-05-18",
         "discord_channel_id": 1562750916350705664,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -138,6 +147,7 @@ STREAMERS = [
         "debut": "2024-05-18",
         "discord_channel_id": 1562750952816123965,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -151,6 +161,7 @@ STREAMERS = [
         "debut": "2024-05-19",
         "discord_channel_id": 1562750902908092467,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -164,6 +175,7 @@ STREAMERS = [
         "debut": "2024-05-19",
         "discord_channel_id": 1562750889150779403,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -177,6 +189,7 @@ STREAMERS = [
         "debut": "2026-10-17",
         "discord_channel_id": 1562750966258733156,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -190,6 +203,7 @@ STREAMERS = [
         "debut": "2026-10-17",
         "discord_channel_id": 1562750977436815421,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -203,6 +217,7 @@ STREAMERS = [
         "debut": "2026-10-18",
         "discord_channel_id": 1562751002489131018,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -216,6 +231,7 @@ STREAMERS = [
         "debut": "2026-10-18",
         "discord_channel_id": 1562750987951804426,
         "is_live": False,
+        "current_title": "",
         "latest_youtube_id": None,
         "latest_tweet_id": None,
         "last_anniversary_check": None
@@ -237,12 +253,13 @@ async def check_chzzk_status(chzzk_id):
             async with session.get(url, headers=headers) as response:
                 if response.status == 200:
                     data = await response.json()
-                    print("치지직 API 응답 데이터:", data)  # 👈 이 줄을 추가!
                     content = data.get("content", {})
+                    
                     status = content.get("openLive", False)
                     live_title = content.get("liveTitle", "제목 없음")
                     chat_channel_id = content.get("chatChannelId")
-                    profile_image = content.get("imageUrl", "")
+                    profile_image = content.get("imageUrl") or content.get("channelImageUrl") or ""
+                    
                     return status, live_title, chat_channel_id, profile_image
     except Exception as e:
         print(f"치지직 API 호출 에러 ({chzzk_id}): {e}")
@@ -282,13 +299,14 @@ async def check_youtube_updates():
 
 
 async def check_twitter_updates():
-    """X(트위터) 최신 글 확인 및 알림 함수"""
+    """X(트위터) 최신 글 확인 및 알림 함수 (안정적인 우회 RSS 브릿지 적용)"""
     for streamer in STREAMERS:
         twt_user = streamer.get("twitter_username")
         if not twt_user:
             continue
             
-        rss_url = f"https://nitter.poast.org/{twt_user}/rss"
+        # Nitter 대체 인스턴스 또는 우회 RSS 경로 활용
+        rss_url = f"https://nitter.privacydev.net/{twt_user}/rss"
         feed = feedparser.parse(rss_url)
         
         if feed.entries:
@@ -387,23 +405,38 @@ async def live_and_chat_monitor():
 
         is_live, title, chat_channel_id, profile_image = await check_chzzk_status(streamer["chzzk_id"])
 
+        # 1️⃣ 방송이 새로 켜졌을 때
         if is_live and not streamer["is_live"]:
             streamer["is_live"] = True
+            streamer["current_title"] = title
             embed = discord.Embed(
                 title=f"🚨 {streamer['name']} 방송 시작!",
                 description=f"**{title}**",
                 color=0x00FFA3
             )
             embed.add_field(name="방송국 바로가기", value=f"[클릭해서 시청하기](https://chzzk.naver.com/live/{streamer['chzzk_id']})", inline=False)
-            
-            # 🖼️ 프로필 사진 썸네일 적용
             if profile_image:
                 embed.set_thumbnail(url=profile_image)
-                
             await channel.send(embed=embed)
 
+        # 2️⃣ 방송 중인데 제목이 바꿨을 때 (✨ NEW!)
+        elif is_live and streamer["is_live"]:
+            if streamer["current_title"] != title:
+                streamer["current_title"] = title
+                embed = discord.Embed(
+                    title=f"✏️ [{streamer['name']}] 방송 제목 변경!",
+                    description=f"**{title}**",
+                    color=0xFFA500
+                )
+                embed.add_field(name="방송국 바로가기", value=f"[클릭해서 시청하기](https://chzzk.naver.com/live/{streamer['chzzk_id']})", inline=False)
+                if profile_image:
+                    embed.set_thumbnail(url=profile_image)
+                await channel.send(embed=embed)
+
+        # 3️⃣ 방송이 꺼졌을 때
         elif not is_live and streamer["is_live"]:
             streamer["is_live"] = False
+            streamer["current_title"] = ""
 
     await check_youtube_updates()
     await check_twitter_updates()
@@ -447,16 +480,18 @@ async def test_alert(ctx, *, streamer_name: str):
 async def on_ready():
     print(f"로그인 완료: {bot.user}")
     
-    # 🔄 재시작 시 이미 켜져 있는 방송은 알림 스킵하도록 상태 동기화
+    # 🔄 재시작 시 현재 방송 상태 및 제목 동기화
     print("🔍 현재 방송 상태 동기화 중...")
     for streamer in STREAMERS:
         if streamer.get("chzzk_id"):
-            is_live, _, _, _ = await check_chzzk_status(streamer["chzzk_id"])
+            is_live, title, _, _ = await check_chzzk_status(streamer["chzzk_id"])
             if is_live:
                 streamer["is_live"] = True
+                streamer["current_title"] = title
                 print(f" - [방송 중 감지됨] {streamer['name']} (알림 스킵)")
             else:
                 streamer["is_live"] = False
+                streamer["current_title"] = ""
     print("✨ 방송 상태 동기화 완료!")
 
     if not live_and_chat_monitor.is_running():
