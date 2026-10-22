@@ -140,13 +140,18 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 
 async def check_chzzk_status(chzzk_id):
-    """치지직 방송 상태 확인 함수 (타임아웃 보호 추가)"""
+    """치지직 방송 상태 확인 함수 (브라우저 위장 헤더 추가)"""
     url = f"https://api.chzzk.naver.com/service/v1/channels/{chzzk_id}"
+    
+    # 네이버가 봇 차단 못 하게 브라우저인 것처럼 위장하는 헤더
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+    
     try:
-        # 5초 동안 응답이 없으면 멈추지 않고 바로 끊어버리도록 타임아웃 설정!
         timeout = aiohttp.ClientTimeout(total=5)
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.get(url) as response:
+            async with session.get(url, headers=headers) as response:
                 if response.status == 200:
                     data = await response.json()
                     content = data.get("content", {})
