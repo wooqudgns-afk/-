@@ -237,6 +237,7 @@ async def check_chzzk_status(chzzk_id):
             async with session.get(url, headers=headers) as response:
                 if response.status == 200:
                     data = await response.json()
+                    print("치지직 API 응답 데이터:", data)  # 👈 이 줄을 추가!
                     content = data.get("content", {})
                     status = content.get("openLive", False)
                     live_title = content.get("liveTitle", "제목 없음")
