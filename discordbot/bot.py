@@ -70,4 +70,4 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 if TOKEN:
     bot.run(TOKEN)
 else:
-    print("❌ DISCORD_TOKEN 환경 변수가 설정되지 않았어!"
+    print("❌ DISCORD_TOKEN 환경 변수가 설정되지 않았어!")
